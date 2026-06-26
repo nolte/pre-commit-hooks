@@ -1,0 +1,23 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: ['--markdown-linebreak-ext=md']
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+
+  # Dogfood: run this repository's own guard against itself.
+  - repo: local
+    hooks:
+      - id: guard-primary-checkout
+        name: primary checkout must stay on develop
+        entry: hooks/guard-primary-checkout.sh
+        language: script
+        always_run: true
+        pass_filenames: false

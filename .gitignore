@@ -1,0 +1,2 @@
+# Test sandboxes created by tests/*.sh
+/tests/.sandbox/

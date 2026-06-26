@@ -1,0 +1,20 @@
+# Reusable pre-commit hooks. Consume from a downstream .pre-commit-config.yaml:
+#
+#   repos:
+#     - repo: https://github.com/nolte/pre-commit-hooks
+#       rev: v1.0.0
+#       hooks:
+#         - id: guard-primary-checkout
+#
+# See README.md for per-hook configuration (e.g. --branch).
+- id: guard-primary-checkout
+  name: primary checkout must stay on the integration branch
+  description: >-
+    Block commits made directly in the primary checkout while it sits on a
+    feature branch. Feature work belongs in a dedicated git worktree.
+    Configure the integration branch with `args: [--branch=main]` (default develop).
+  entry: hooks/guard-primary-checkout.sh
+  language: script
+  always_run: true
+  pass_filenames: false
+  stages: [pre-commit]
