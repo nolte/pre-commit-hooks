@@ -43,7 +43,7 @@ hooks:
 ## Behaviour
 
 - **Enforces only in the primary checkout.** The hook compares the
-  per-worktree git-dir with the shared git-common-dir; they are equal only
+  per-worktree git-dir with the shared git-common-dir; they're equal only
   in the primary checkout. In a linked worktree they differ, so the hook
   exits 0 — feature-branch commits belong there.
 - **Allows the integration branch.** When the primary checkout is on the
@@ -55,7 +55,7 @@ hooks:
 - **Never mutates state.** It only refuses the commit; the branch, index,
   and working tree are left untouched.
 
-It is registered with `always_run: true` and `pass_filenames: false`, so it
+It's registered with `always_run: true` and `pass_filenames: false`, so it
 fires on every commit regardless of which files are staged.
 
 ## Example
