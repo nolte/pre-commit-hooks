@@ -20,9 +20,9 @@ flagged inline.
 ## 1. Mental model — how pre-commit executes a hook
 
 - pre-commit is a **multi-language framework** for managing git hooks (~260k
-  projects; the framework itself is ~97% Python). It exists because git's
-  client-side hooks live under `.git/hooks`, are not copied on `clone`, and must
-  be installed per checkout — a framework installs and manages them.
+  projects; the framework itself is ~97% Python). It exists because the
+  client-side hooks of git live under `.git/hooks`, are not copied on `clone`,
+  and must be installed per checkout — a framework installs and manages them.
 - Two YAML files define the contract:
   - **`.pre-commit-config.yaml`** — the *consumer* side. Lists `repos:`, each
     pinned to a `rev`, each selecting hooks by `id` and optionally overriding
@@ -90,7 +90,7 @@ and the special **`manual`** stage.
   `pre-push`, `pre-merge-commit`. Declaring `minimum_pre_commit_version: 3.2.0`
   is appropriate when relying on the new names.
 - **`pre-commit`** — runs before the commit message is entered; nonzero aborts
-  the commit. The default and most common stage. Bypassable with `--no-verify`.
+  the commit. The default and most common stage; bypassable with `--no-verify`.
 - **`commit-msg`** — git invokes it with one parameter: the path to a temp file
   holding the commit message. Use for message-format enforcement; nonzero aborts.
 - **`prepare-commit-msg`** — runs before the editor opens; can pre-populate the
@@ -292,9 +292,9 @@ Hooks execute **arbitrary code on every commit** once a developer runs
   the consumer chooses, not a guarantee the framework provides.)*
 - **CVE-2025-62726** (CVSS 8.8, High): pre-commit hooks delivered via a cloned
   remote repository are a real-world remote-code-execution vector — committing
-  hook code that runs automatically on the next git operation. Mitigations: don't
-  run hooks from untrusted repositories; never run hooks as **root** (root
-  execution hands the attacker the whole machine).
+  hook code that runs automatically on the next git operation. Common
+  mitigations: don't run hooks from untrusted repositories; never run hooks as
+  **root** (root execution hands the attacker the whole machine).
 
 **What a hook should not do:** run untrusted input through a shell without
 quoting; assume `args`/filenames are safe (paths can contain spaces/newlines —
