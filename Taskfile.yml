@@ -22,6 +22,11 @@ tasks:
       - task: pre-commit:start
 
   docs:
-    desc: Serve the mkdocs site locally
+    desc: Build the mkdocs site with the same strict gate CI runs
+    cmds:
+      - mkdocs build --strict
+
+  docs:serve:
+    desc: Serve the mkdocs site locally for preview
     cmds:
       - task: mkdocs:start

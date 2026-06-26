@@ -1,7 +1,10 @@
 [Pp]robot
 Ansible
 asdf
+config
 dotfile
+env
 mkdocs
+nolte
 Taskfile
 zsh

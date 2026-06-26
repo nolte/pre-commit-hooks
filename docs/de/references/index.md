@@ -4,7 +4,7 @@ audience:
   - hook-consumer-project
   - consumer-developer
   - consumer-ci
-content_mode: reference
+content_mode: meta
 track: developer-docs
 last_updated: 2026-06-26
 source_language: en
