@@ -39,7 +39,9 @@ new_repo() { # <dir> <integration-branch>
 
 run_hook() { # runs the hook inside $1, with remaining args forwarded; echoes exit code
   local dir="$1"; shift
-  ( cd "$dir" && CI= "$hook" "$@" >/dev/null 2>&1; echo "$?" )
+  # `env -u CI` removes CI from the environment so the hook's CI short-circuit
+  # does not fire — these cases assert the real primary-checkout enforcement.
+  ( cd "$dir" && env -u CI "$hook" "$@" >/dev/null 2>&1; echo "$?" )
 }
 
 # 1. Primary checkout on develop → allowed.

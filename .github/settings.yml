@@ -1,0 +1,10 @@
+---
+# These settings are synced to GitHub by https://probot.github.io/apps/settings/
+
+_extends: gh-plumbing:.github/commons-settings.yml
+
+repository:
+  name: pre-commit-hooks
+  description: Reusable pre-commit hooks for the nolte portfolio
+  homepage: https://nolte.github.io/pre-commit-hooks
+  topics: pre-commit, git-hooks, git-worktree

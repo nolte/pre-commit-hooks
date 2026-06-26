@@ -1,0 +1,27 @@
+---
+version: '3'
+
+includes:
+  mkdocs: https://raw.githubusercontent.com/nolte/taskfiles/main/src/taskfile-include-mkdocs.yaml
+  pre-commit: https://raw.githubusercontent.com/nolte/taskfiles/main/src/taskfile-include-pre-commit.yaml
+
+tasks:
+  default:
+    cmds:
+      - task -l
+    silent: true
+
+  test:
+    desc: Run the hook self-tests
+    cmds:
+      - tests/test_guard-primary-checkout.sh
+
+  lint:
+    desc: Run all pre-commit hooks
+    cmds:
+      - task: pre-commit:start
+
+  docs:
+    desc: Serve the mkdocs site locally
+    cmds:
+      - task: mkdocs:start

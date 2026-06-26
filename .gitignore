@@ -1,2 +1,30 @@
 # Test sandboxes created by tests/*.sh
 /tests/.sandbox/
+
+# In-flight resume state of resumable Claude skills and agents
+/.resume/
+
+# MkDocs build output
+site
+
+# Local Python virtual environments
+.venv/
+
+# Claude Code local (per-developer) settings
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Vale styles are fetched by `vale sync`; only the local config and
+# vocabularies are tracked.
+.github/styles/*
+!.github/styles/.keep
+!.github/styles/.vale-config
+!.github/styles/nolte-styles
+!.github/styles/config
+.github/styles/config/*
+!.github/styles/config/vocabularies
+.github/styles/config/vocabularies/*
+!.github/styles/config/vocabularies/technical
+!.github/styles/config/vocabularies/technical/**
+!.github/styles/config/vocabularies/pre-commit-hooks
+!.github/styles/config/vocabularies/pre-commit-hooks/**

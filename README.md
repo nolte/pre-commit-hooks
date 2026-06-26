@@ -1,9 +1,14 @@
 # pre-commit-hooks
 
+[![Static Tests](https://github.com/nolte/pre-commit-hooks/actions/workflows/build-static-tests.yaml/badge.svg)](https://github.com/nolte/pre-commit-hooks/actions/workflows/build-static-tests.yaml)
+[![Spelling Check](https://github.com/nolte/pre-commit-hooks/actions/workflows/spelling.yaml/badge.svg)](https://github.com/nolte/pre-commit-hooks/actions/workflows/spelling.yaml)
+
+<!--intro-start-->
 Reusable [pre-commit](https://pre-commit.com) hooks for the nolte portfolio.
 Each hook ships as a small, dependency-free script and is consumed remotely
 through pre-commit's standard `repos:` mechanism — there is no build step, the
 scripts themselves are the product.
+<!--intro-end-->
 
 ## Hooks
 
@@ -13,6 +18,7 @@ scripts themselves are the product.
 
 ## Usage
 
+<!--usage-start-->
 Add the repository to the consumer's `.pre-commit-config.yaml` and pin a
 released tag:
 
@@ -34,6 +40,7 @@ From then on, every `git commit` in the primary checkout is blocked while the
 checkout is on a feature branch (`feat/…`, `fix/…`, etc.). Commit from a
 worktree instead — see [`nolte/taskfiles`](https://github.com/nolte/taskfiles)
 `worktree:add` for creating one.
+<!--usage-end-->
 
 ### Configuration
 

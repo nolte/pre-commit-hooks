@@ -1,0 +1,20 @@
+on:
+  release:
+    types: [published]
+  # Manual fallback when the `release: published` event was emitted under
+  # GITHUB_TOKEN — GitHub doesn't fire downstream workflows in that case
+  # (Known Platform Constraint per spec/project/workflow-health/).
+  workflow_dispatch:
+
+jobs:
+  publish_docs:
+    uses: nolte/gh-plumbing/.github/workflows/reusable-mkdocs.yaml@v1.1.18
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+      id-token: write
+      pages: write
+    concurrency:
+      cancel-in-progress: true
+      group: "pages"

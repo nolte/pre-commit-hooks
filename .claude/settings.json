@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(task:*)",
+      "Bash(pre-commit run:*)",
+      "Bash(shellcheck:*)",
+      "Bash(tests/test_guard-primary-checkout.sh)",
+      "Bash(vale:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git worktree:*)"
+    ]
+  }
+}

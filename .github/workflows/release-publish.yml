@@ -1,0 +1,31 @@
+---
+name: Release Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        required: true
+        type: string
+        description: |
+          Tag to publish. Must match an open release-drafter draft on the
+          repository's default branch. No "newest wins" heuristic per
+          spec/project/release-automation/ §Operational contract.
+      dry_run:
+        required: false
+        type: boolean
+        default: false
+        description: |
+          When true, run every validation gate but skip the final
+          `gh release edit --draft=false` call.
+
+jobs:
+  publish_release:
+    uses: nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml@v1.1.18
+    with:
+      tag: ${{ inputs.tag }}
+      dry_run: ${{ inputs.dry_run }}
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write

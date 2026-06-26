@@ -1,0 +1,10 @@
+checkout
+develop
+gitignored
+hardcode
+kebab
+pre-commit
+repo
+shellcheck
+worktree
+worktrees
