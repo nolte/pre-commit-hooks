@@ -45,7 +45,7 @@ hooks:
 
 - **Inspects the staged set, not a file list.** Registered with
   `pass_filenames: false`, the hook reads the staged paths itself via
-  `git diff --cached`. That is deliberate: pre-commit may split a per-hook file
+  `git diff --cached`. That's deliberate: pre-commit may split a per-hook file
   list across parallel processes, which could separate an `en.md`/`de.md` pair
   and cause a false positive. Reading the whole staged set once avoids that.
 - **Enforces lockstep per topic.** When at least one configured `<lang>.md` of a
@@ -54,7 +54,7 @@ hooks:
   commit with exit 1 and lists the unstaged files.
 - **Ignores brand-new topics.** A topic with no tracked sibling yet (for example
   a freshly created `spec/<topic>/en.md` with no `de.md` in `HEAD`) is allowed —
-  that is a completeness concern, not a sync concern.
+  that's a completeness concern, not a sync concern.
 - **Fails open in CI.** When `CI` is set, the hook exits 0 immediately; CI runs
   `pre-commit run --all-files`, where there is no staged set to reason about.
 - **Never mutates state.** It only refuses the commit; the index and working tree
@@ -89,7 +89,7 @@ A commit that stages only the canonical language of an existing topic:
   single commit with `git commit --no-verify`, then bring the translation in sync
   in a follow-up.
 - **A new language should be enforced.** Add it to the `args` list
-  (`--lang=fr`). The hook only requires languages it is told about.
+  (`--lang=fr`). The hook only requires languages it's told about.
 - **Specs live outside `spec/`.** Point the hook at the right root with
   `--spec-dir=<path>`.
 - **CI commits are unexpectedly blocked.** They aren't: the hook exits 0 whenever
