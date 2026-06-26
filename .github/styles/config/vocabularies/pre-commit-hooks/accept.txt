@@ -6,5 +6,6 @@ kebab
 pre-commit
 repo
 shellcheck
+unstaged
 worktree
 worktrees

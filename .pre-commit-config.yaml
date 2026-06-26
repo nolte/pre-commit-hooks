@@ -12,7 +12,7 @@ repos:
     hooks:
       - id: shellcheck
 
-  # Dogfood: run this repository's own guard against itself.
+  # Dogfood: run this repository's own guards against itself.
   - repo: local
     hooks:
       - id: guard-primary-checkout
@@ -20,4 +20,10 @@ repos:
         entry: hooks/guard-primary-checkout.sh
         language: script
         always_run: true
+        pass_filenames: false
+      - id: guard-spec-translation-sync
+        name: spec translations must be staged together
+        entry: hooks/guard-spec-translation-sync.sh
+        language: script
+        files: ^spec/[^/]+/[a-z]{2,}\.md$
         pass_filenames: false

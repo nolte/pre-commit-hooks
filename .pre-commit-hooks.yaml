@@ -18,3 +18,15 @@
   always_run: true
   pass_filenames: false
   stages: [pre-commit]
+- id: guard-spec-translation-sync
+  name: spec translations must be staged together
+  description: >-
+    Block a commit that stages one language of a multilingual spec topic
+    (spec/<topic>/<lang>.md) while leaving a tracked sibling translation
+    unstaged. Configure the languages with `args: [--lang=en, --lang=de]`
+    (default en de) and the spec root with `--spec-dir` (default spec).
+  entry: hooks/guard-spec-translation-sync.sh
+  language: script
+  files: ^spec/[^/]+/[a-z]{2,}\.md$
+  pass_filenames: false
+  stages: [pre-commit]
