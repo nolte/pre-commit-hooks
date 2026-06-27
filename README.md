@@ -15,6 +15,7 @@ scripts themselves are the product.
 | Hook ID | Purpose | Key argument |
 |---------|---------|--------------|
 | `guard-primary-checkout` | Block commits made directly in the primary checkout while it sits on a feature branch — feature work belongs in a dedicated [git worktree](https://git-scm.com/docs/git-worktree). | `--branch <name>` (default `develop`) |
+| `guard-spec-translation-sync` | Block a commit that stages one language of a `spec/<topic>/<lang>.md` set while leaving a tracked sibling translation unstaged — keeps multilingual specs in lockstep. | `--lang <code>` (default `en` `de`), `--spec-dir <path>` (default `spec`) |
 
 ## Usage
 

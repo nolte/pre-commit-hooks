@@ -2,6 +2,17 @@
 
 Requirements, NFRs, and domain knowledge for this repository.
 
+## Domain knowledge
+
+- [`hook-authoring/`](hook-authoring/en.md) ([de](hook-authoring/de.md)) — the
+  reference knowledge base for designing, building, distributing, and securing
+  reusable pre-commit hooks (manifest fields, language backends, stages, file
+  targeting, the hook contract, performance, anti-patterns, supply-chain
+  security). Intended as the foundation a skill consults when developing a
+  *targeted* hook. Canonical language: English.
+
+## Per-hook requirements
+
 The hooks shipped here operationalise portfolio-wide specifications that live
 in [`nolte/claude-shared`](https://github.com/nolte/claude-shared) rather than
 being restated per repository:
