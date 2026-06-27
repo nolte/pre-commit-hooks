@@ -25,5 +25,5 @@ repos:
         name: spec translations must be staged together
         entry: hooks/guard-spec-translation-sync.sh
         language: script
-        files: ^spec/[^/]+/[a-z]{2,}\.md$
+        always_run: true
         pass_filenames: false

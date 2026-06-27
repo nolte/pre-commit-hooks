@@ -43,8 +43,8 @@ hooks:
 
 ## Behaviour
 
-- **Inspects the staged set, not a file list.** Registered with
-  `pass_filenames: false`, the hook reads the staged paths itself via
+- **Inspects the staged set, not a file list.** Registered with `always_run: true`
+  and `pass_filenames: false`, the hook reads the staged paths itself via
   `git diff --cached`. That's deliberate: pre-commit may split a per-hook file
   list across parallel processes, which could separate an `en.md`/`de.md` pair
   and cause a false positive. Reading the whole staged set once avoids that.

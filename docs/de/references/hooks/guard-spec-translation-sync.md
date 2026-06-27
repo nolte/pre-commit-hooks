@@ -43,8 +43,9 @@ hooks:
 
 ## Verhalten
 
-- **Inspiziert das Staged-Set, keine Dateiliste.** Mit `pass_filenames: false`
-  registriert, liest der Hook die gestagten Pfade selbst via `git diff --cached`.
+- **Inspiziert das Staged-Set, keine Dateiliste.** Mit `always_run: true` und
+  `pass_filenames: false` registriert, liest der Hook die gestagten Pfade selbst
+  via `git diff --cached`.
   Das ist Absicht: pre-commit kann eine Per-Hook-Dateiliste über parallele
   Prozesse aufteilen, was ein `en.md`/`de.md`-Paar trennen und einen Fehlalarm
   auslösen könnte. Das ganze Staged-Set einmal zu lesen vermeidet das.

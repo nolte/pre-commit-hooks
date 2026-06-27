@@ -27,6 +27,10 @@
     (default en de) and the spec root with `--spec-dir` (default spec).
   entry: hooks/guard-spec-translation-sync.sh
   language: script
-  files: ^spec/[^/]+/[a-z]{2,}\.md$
+  # always_run + pass_filenames:false: the hook derives its own staged set from
+  # `git diff --cached`, so it must not be gated by a static `files` filter — a
+  # `files: ^spec/...` regex would hard-code the root and silently disable the
+  # `--spec-dir` override. Mirrors guard-primary-checkout's wiring.
+  always_run: true
   pass_filenames: false
   stages: [pre-commit]

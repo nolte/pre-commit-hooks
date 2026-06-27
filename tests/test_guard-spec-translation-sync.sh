@@ -125,6 +125,20 @@ check "CI short-circuits to allow" 0 "$( cd "$sandbox/r9" && CI=1 "$hook" >/dev/
 new_repo "$sandbox/r10"; seed_pair "$sandbox/r10" topic
 check "no staged files is allowed" 0 "$(run_hook "$sandbox/r10")"
 
+# 11. Non-ASCII topic dir: only en.md staged, de.md tracked → blocked. Guards
+#     against git C-quoting non-ASCII paths in `diff --cached --name-only`, which
+#     would otherwise make the path unmatchable and let the pair slip through.
+new_repo "$sandbox/r11"; seed_pair "$sandbox/r11" "größe"
+put "$sandbox/r11" "spec/größe/en.md" "en v2"
+git -C "$sandbox/r11" add "spec/größe/en.md"
+check "non-ASCII topic dir is still guarded" 1 "$(run_hook "$sandbox/r11")"
+
+# 12. Trailing slash in --spec-dir is normalised (still blocks a half-staged pair).
+new_repo "$sandbox/r12"; seed_pair "$sandbox/r12" topic
+put "$sandbox/r12" spec/topic/en.md "en v2"
+git -C "$sandbox/r12" add spec/topic/en.md
+check "trailing-slash --spec-dir is normalised" 1 "$(run_hook "$sandbox/r12" --spec-dir=spec/)"
+
 echo
 echo "Passed: $pass  Failed: $fail"
 [ "$fail" -eq 0 ]

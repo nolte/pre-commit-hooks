@@ -35,6 +35,8 @@ done
 if [ "${#langs[@]}" -eq 0 ]; then
   langs=(en de)
 fi
+# Normalise a trailing slash so `--spec-dir spec/` matches like `--spec-dir spec`.
+spec_dir="${spec_dir%/}"
 
 # Fail open in CI and other non-interactive automation. CI runs
 # `pre-commit run --all-files`, where there is no staged set (`git diff --cached`
@@ -45,21 +47,35 @@ if [ -n "${CI:-}" ]; then
   exit 0
 fi
 
-# The paths staged for this commit (added/copied/modified/renamed).
-staged="$(git diff --cached --name-only --diff-filter=ACMR)"
-[ -z "$staged" ] && exit 0
+# The paths staged for this commit (added/copied/modified/renamed), read
+# NUL-delimited into an array. `git diff --name-only -z` emits raw, unquoted,
+# NUL-terminated paths; without -z git C-quotes any path with non-ASCII bytes
+# (e.g. `spec/größe/en.md`) into a `"..."` form that the matching below would
+# miss — silently letting a half-staged pair through.
+staged=()
+while IFS= read -r -d '' path; do
+  staged+=("$path")
+done < <(git diff --cached --name-only -z --diff-filter=ACMR)
+[ "${#staged[@]}" -eq 0 ] && exit 0
 
-is_staged() { printf '%s\n' "$staged" | grep -qxF -- "$1"; }
+in_array() { # <needle> [element…]; true when needle equals one element
+  local needle="$1"; shift
+  local element
+  for element in "$@"; do
+    [ "$element" = "$needle" ] && return 0
+  done
+  return 1
+}
+is_staged() { in_array "$1" ${staged[@]+"${staged[@]}"}; }
 # A language file is "in play" for a topic when it is tracked in HEAD; a tracked
 # sibling that is not staged is the drift. A brand-new topic (no HEAD entry yet)
 # is not blocked.
 tracked_in_head() { git cat-file -e "HEAD:$1" 2>/dev/null; }
 
-# Collect the topics that have at least one staged configured <lang>.md, where a
-# topic is the single path segment in spec/<topic>/<lang>.md.
-topics=""
-while IFS= read -r path; do
-  [ -z "$path" ] && continue
+# Collect the unique topics that have at least one staged configured <lang>.md,
+# where a topic is the single path segment in spec/<topic>/<lang>.md.
+topics=()
+for path in "${staged[@]}"; do
   case "$path" in
     "$spec_dir"/*/*.md) ;;
     *) continue ;;
@@ -68,30 +84,19 @@ while IFS= read -r path; do
   case "$rest" in */*/*) continue ;; esac   # reject nesting below <topic>/
   topic="${rest%%/*}"
   lang="${rest#*/}"; lang="${lang%.md}"
-  for configured in "${langs[@]}"; do
-    if [ "$configured" = "$lang" ]; then
-      topics="${topics}${topic}"$'\n'
-      break
-    fi
-  done
-done <<EOF
-$staged
-EOF
-
-topics="$(printf '%s' "$topics" | sort -u)"
-[ -z "$topics" ] && exit 0
+  in_array "$lang" "${langs[@]}" || continue
+  in_array "$topic" ${topics[@]+"${topics[@]}"} || topics+=("$topic")
+done
+[ "${#topics[@]}" -eq 0 ] && exit 0
 
 missing=()
-while IFS= read -r topic; do
-  [ -z "$topic" ] && continue
+for topic in "${topics[@]}"; do
   for lang in "${langs[@]}"; do
     file="${spec_dir}/${topic}/${lang}.md"
     is_staged "$file" && continue
     tracked_in_head "$file" && missing+=("$file")
   done
-done <<EOF
-$topics
-EOF
+done
 
 if [ "${#missing[@]}" -eq 0 ]; then
   exit 0
