@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+        <loc>None./</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="None"/>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/"/>
+    </url>
+    <url>
+        <loc>Nonegetting-started/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="Nonegetting-started/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/getting-started/"/>
+    </url>
+    <url>
+        <loc>Noneguides/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="Noneguides/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/guides/"/>
+    </url>
+    <url>
+        <loc>Noneguides/contributing/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="Noneguides/contributing/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/guides/contributing/"/>
+    </url>
+    <url>
+        <loc>Nonereferences/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="Nonereferences/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/references/"/>
+    </url>
+    <url>
+        <loc>Nonereferences/governance/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="Nonereferences/governance/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/references/governance/"/>
+    </url>
+    <url>
+        <loc>Nonereferences/hooks/guard-primary-checkout/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="Nonereferences/hooks/guard-primary-checkout/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/references/hooks/guard-primary-checkout/"/>
+    </url>
+    <url>
+        <loc>Nonereferences/hooks/guard-spec-translation-sync/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="Nonereferences/hooks/guard-spec-translation-sync/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/references/hooks/guard-spec-translation-sync/"/>
+    </url>
+    <url>
+        <loc>Nonede/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="None"/>
+    </url>
+    <url>
+        <loc>Nonede/getting-started/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/getting-started/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="Nonegetting-started/"/>
+    </url>
+    <url>
+        <loc>Nonede/guides/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/guides/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="Noneguides/"/>
+    </url>
+    <url>
+        <loc>Nonede/guides/contributing/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/guides/contributing/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="Noneguides/contributing/"/>
+    </url>
+    <url>
+        <loc>Nonede/references/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/references/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="Nonereferences/"/>
+    </url>
+    <url>
+        <loc>Nonede/references/governance/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/references/governance/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="Nonereferences/governance/"/>
+    </url>
+    <url>
+        <loc>Nonede/references/hooks/guard-primary-checkout/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/references/hooks/guard-primary-checkout/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="Nonereferences/hooks/guard-primary-checkout/"/>
+    </url>
+    <url>
+        <loc>Nonede/references/hooks/guard-spec-translation-sync/</loc>
+        <lastmod>2026-06-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="Nonede/references/hooks/guard-spec-translation-sync/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="Nonereferences/hooks/guard-spec-translation-sync/"/>
+    </url>
+</urlset>
