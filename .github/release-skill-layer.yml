@@ -1,0 +1,5 @@
+# Project-type override for the release-notes-curate / release-publish-trigger
+# skills. This repo ships pre-commit hook scripts as its product; catalog
+# autodetection (mkdocs.yml present, no pyproject.toml / package.json) would
+# otherwise misclassify it as documentation-only.
+project_type: pre-commit-hook-collection
