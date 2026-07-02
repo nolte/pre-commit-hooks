@@ -1,4 +1,5 @@
 site_name: "pre-commit-hooks"
+site_url: "https://nolte.github.io/pre-commit-hooks/"
 theme:
   name: material
 docs_dir: docs/
