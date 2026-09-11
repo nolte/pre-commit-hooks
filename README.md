@@ -16,6 +16,7 @@ scripts themselves are the product.
 |---------|---------|--------------|
 | `guard-primary-checkout` | Block commits made directly in the primary checkout while it sits on a feature branch — feature work belongs in a dedicated [git worktree](https://git-scm.com/docs/git-worktree). | `--branch <name>` (default `develop`) |
 | `guard-spec-translation-sync` | Block a commit that stages one language of a `spec/<topic>/<lang>.md` set while leaving a tracked sibling translation unstaged — keeps multilingual specs in lockstep. | `--lang <code>` (default `en` `de`), `--spec-dir <path>` (default `spec`) |
+| `workflow-gate-integrity` | Refuse a GitHub Actions gate that can't report a failure: a discarded exit code, `continue-on-error`, a job reading a dependency's outputs without its result, a comment truncating a continued command, or a file the workflow reads that its own `paths:` filter excludes. | `--scan-root <path>` (default `.github/workflows`) |
 
 ## Usage
 
@@ -57,9 +58,20 @@ repos:
         args: [--branch=main]
 ```
 
+`workflow-gate-integrity` scans `.github/workflows` by default. Point it
+elsewhere the same way:
+
+```yaml
+      - id: workflow-gate-integrity
+        args: [--scan-root=ci/workflows]
+```
+
 ### Behaviour
 
-`guard-primary-checkout` is deliberately narrow and fail-open in automation:
+The two guards are deliberately narrow and fail-open in automation;
+`workflow-gate-integrity` is neither, and the difference is the point.
+
+`guard-primary-checkout`:
 
 - It enforces **only** in the primary checkout (where the per-worktree git-dir
   equals the shared git-common-dir). In a linked worktree, feature-branch
@@ -71,10 +83,22 @@ repos:
 - It leaves the branch untouched; it only refuses the commit and prints how to
   move the work into a worktree.
 
+`workflow-gate-integrity` **fails closed**. It doesn't short-circuit under
+`CI`, because it checks CI configuration and a gate that exempts itself from
+CI would be the very shape it refuses. Its exit codes are three-valued so that
+a scan which didn't happen stays distinguishable from one that found nothing:
+`0` clean, `1` a site that can't fail and carries no reason, `2` the scan did
+not run. A site may stand by carrying a `# gate-integrity-ok: <reason>`
+comment, where the reason is mandatory and must be more than a word.
+
 ## Prerequisites
 
 - [pre-commit](https://pre-commit.com) on the `PATH`.
-- A `git` repository (the hooks shell out to `git` only; no other runtime).
+- A `git` repository. The two `guard-*` hooks shell out to `git` only.
+- For `workflow-gate-integrity` additionally `python3` and
+  [PyYAML](https://pypi.org/project/PyYAML/) on the `PATH`: two of the five
+  shapes it detects read parsed workflow YAML. Without the parser it exits `2`
+  and scans nothing, rather than scanning partially and reporting green.
 
 ## Why this exists
 

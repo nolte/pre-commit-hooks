@@ -19,6 +19,46 @@ die Manifeste von `pre-commit/pre-commit` und `pre-commit/pre-commit-hooks`, die
 [Quellen](#quellen). Wo eine Aussage umstritten oder versionsabhängig ist, ist sie
 inline gekennzeichnet.
 
+## 0. Warum ein Hook überhaupt existiert — die Defect-Class-Guard-Methode
+
+Ein Hook in diesem Repository ist keine Stilfrage. Er ist der mechanische
+Rückstand einer Defektklasse, die einmal geschlossen wurde und nicht
+zurückkommen darf. Die Methode ist in
+**[`nolte/claude-shared#573`](https://github.com/nolte/claude-shared/issues/573)**
+spezifiziert, *„the portfolio has no rule for what a closed defect class leaves
+behind (defect-class guards)"*, und die Hooks dieser Spec setzen sie um. Ihre
+sechs Regeln, in der Form, die für das Authoring zählt:
+
+1. Eine geschlossene Defektklasse hinterlässt einen mechanischen Guard — oder
+   eine schriftliche Notiz, warum keiner möglich ist.
+2. Der Guard läuft in einer **erzwungenen** Lane. Ein Guard in einer beratenden
+   Lane ist ein Kommentar.
+3. Der Guard **zählt die Klasse auf**; er prüft nicht die eine Stelle, an der der
+   Defekt gefunden wurde. Das Prädikat gehört in den Header der Datei, nicht in
+   die Commit-Message.
+4. Ausnahmen stehen in einer Allowlist mit je einer Begründung, und ein Eintrag,
+   der auf nichts mehr passt, lässt den Guard fehlschlagen.
+5. Der Guard trägt die Issue-Nummer im Namen, damit Befund und Regel gemeinsam
+   auffindbar bleiben.
+6. Der Selektor darf kein Dateiname sein, wenn die Eigenschaft eine Eigenschaft
+   der zusammengesetzten Anwendung ist.
+
+Regel 5 braucht für dieses Repository eine Lesart. Die Hooks hier gelten
+portfolioweit: sie schließen eine Klasse für jeden Konsumenten, nicht einen
+Defekt dieses Repositories, also gibt es keine einzelne Issue-Nummer für die
+Hook-ID. Die Herkunft steht stattdessen im Header des Hooks und benennt die
+Issues, aus deren Defekten er gebaut wurde. `workflow-gate-integrity` ist das
+ausgearbeitete Beispiel — sein Modul-Docstring nennt die ursprünglichen
+kamerplanter-Issues, und seine Fixtures unter
+`tests/fixtures/workflow-gate-integrity/` tragen den Commit, aus dem sie jeweils
+extrahiert wurden.
+
+Regel 3 wird am häufigsten von einem Hook verletzt, der fertig aussieht. Ein
+Guard, der die Fundstelle statt der Klasse prüft, besteht am Tag seiner
+Einführung und feuert danach nie wieder. §9 ist die Stelle, an der das auffällt:
+Ein Hook ist verifiziert, wenn er auf dem Defekt, aus dem er gebaut wurde,
+**rot war** — nicht, wenn er auf dem aktuellen Stand grün ist.
+
 ## 1. Mentales Modell — wie pre-commit einen Hook ausführt
 
 - pre-commit ist ein **mehrsprachiges Framework** zur Verwaltung von git-Hooks
@@ -270,6 +310,38 @@ Für Hooks, die auf dem Repo als Ganzes statt pro Datei arbeiten,
 - **`pre-commit try-repo`** für einen echten End-to-End-Lauf durch das Framework.
 - Für Python-Hooks die Check-Funktion direkt mit `pytest` unit-testen.
 - `pre-commit validate-manifest` in CI ausführen, um Manifest-Regressionen zu fangen.
+
+**Falsifikation — das Gate, auf das §0 Regel 3 angewiesen ist.** Ein Hook ist
+verifiziert, wenn er auf dem Defekt, aus dem er gebaut wurde, **rot war** — nicht,
+wenn er auf dem aktuellen Stand grün ist. Ein Hook, der in seinem
+Ursprungs-Repository grün ist und im konsumierenden nie rot war, ist nicht
+verifiziert, er ist installiert.
+
+- Ein Fixture des **Vor-Fix-Zustands eines echten geschlossenen Defekts**
+  vorhalten, wörtlich aus dem Commit extrahiert, der ihn behoben hat
+  (`git show <fix>^:<pfad>`), zusammen mit dem Nach-Fix-Zustand. Den
+  Extraktionsbefehl und den Fix-Commit neben dem Fixture festhalten; den Defekt
+  nicht von Hand nachbauen, und dem Fixture selbst keinen Herkunfts-Header
+  voranstellen, weil das die Zeilennummern verschiebt, auf die die Assertion
+  greift.
+- **Auf den Befund asserten, nicht auf den Exit-Code.** Über einem echten
+  Vor-Fix-Baum ist der Hook meist aus mehreren unabhängigen Gründen gleichzeitig
+  rot, sodass eine Exit-Code-Assertion besteht, ohne etwas über den benannten
+  Defekt zu beweisen — und weiter besteht, nachdem der Hook die Fähigkeit
+  verloren hat, ihn zu erkennen. Die Assertion auf Datei, Zeile und Befundart
+  keyen.
+- **Ein leeres Ergebnis darf kein Bestehen sein können.** Wo „keine Funde"
+  selbst ein erwarteter Wert ist, lässt ein Helper, der bei einem Absturz leer
+  zurückkommt, genau diese Fälle bestehen, ohne dass der Hook lief. Stattdessen
+  eine eindeutige Fehlermarkierung ausgeben. Das ist die Defektklasse des Hooks
+  selbst, reproduziert in seinem Test.
+- **Die Falsifikationsfälle mutationsprüfen**: die Form abschalten, die der
+  jeweilige Fall abdeckt, und bestätigen, dass genau dieser Fall fällt — und nur
+  er. Eine Assertion, die das Entfernen des geprüften Codes überlebt, ist keine.
+- Stellt sich ein benannter Defekt als **außerhalb der Reichweite** des Hooks
+  heraus, gehört das in den Fixture-Nachweis, und ein echter Defekt derselben
+  Klasse tritt an seine Stelle. Kein Fixture erfinden, das einen unerreichbaren
+  Defekt als abgedeckt erscheinen lässt.
 
 ## 10. Anti-Patterns
 

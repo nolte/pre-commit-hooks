@@ -25,6 +25,11 @@ Eine Seite pro Hook unter `hooks/`. Jede Seite folgt demselben Schema
 - [guard-primary-checkout](hooks/guard-primary-checkout.md): blockiert
   Commits im primären Checkout, während dieser auf einem Feature-Branch
   sitzt.
+- [guard-spec-translation-sync](hooks/guard-spec-translation-sync.md):
+  blockiert einen Commit, der eine Sprache eines mehrsprachigen Spec-Themas
+  staged und eine getrackte Schwester-Übersetzung ungestaged lässt.
+- [workflow-gate-integrity](hooks/workflow-gate-integrity.md): weist ein
+  GitHub-Actions-Gate zurück, das keinen Fehlschlag melden kann.
 
 ## Gemeinsamer Vertrag
 
@@ -47,13 +52,20 @@ repos:
 Pinne auf einen released Tag für deterministisches Verhalten. Renovate hebt
 das `rev` in der Config des Konsumenten wie jede andere Abhängigkeit an.
 
-### Fail-open in der Automatisierung
+### Fail-open in der Automatisierung — für Workflow-Guards
 
-Jeder Hook bricht mit *erlauben* ab, wenn die Umgebungsvariable `CI` gesetzt
-ist. CI checkt den Branch als detached HEAD in einem einfachen Clone aus,
-was von einem primären Checkout auf einem Feature-Branch nicht zu
-unterscheiden ist; die Hooks zielen auf den lokalen Commit einer
-Entwicklerin, nicht auf den CI-Lint-Job.
+Ein **Workflow-Guard** bricht mit *erlauben* ab, wenn die Umgebungsvariable
+`CI` gesetzt ist. CI checkt den Branch als detached HEAD in einem einfachen
+Clone aus, was von einem primären Checkout auf einem Feature-Branch nicht zu
+unterscheiden ist; diese Hooks zielen auf den lokalen Commit einer
+Entwicklerin, nicht auf den CI-Lint-Job. `guard-primary-checkout` und
+`guard-spec-translation-sync` sind von dieser Art.
+
+Eine **Korrektheitsprüfung** bekommt diese Ausnahme nicht. Sie läuft auch
+unter `CI` und schlägt fail-closed fehl, denn eine Prüfung, die sich aus der
+Umgebung heraushält, die sie absichern soll, ist kein Gate.
+`workflow-gate-integrity` ist von dieser Art, und seine Seite sagt das
+ausdrücklich. Jede Hook-Seite nennt unter **Verhalten**, welcher Art sie ist.
 
 ### Primärer Checkout versus linked Worktree
 
