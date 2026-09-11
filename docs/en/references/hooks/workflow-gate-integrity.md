@@ -16,8 +16,8 @@ go red is indistinguishable from one that's not running, and both look the
 same downstream: green.
 
 See [References → Common contract](../index.md#common-contract) for the pinning
-and configuration conventions that apply across every hook. Two of them do
-**not** apply here, and the exceptions are stated under
+and configuration conventions that apply across every hook. Two of them
+don't apply here, and the exceptions are stated under
 [Behaviour](#behaviour).
 
 ## Prerequisites
@@ -166,5 +166,5 @@ outcome is not a verdict:
 
 - [`spec/hook-authoring`](../governance.md) §0 records the defect-class-guard
   method this hook implements, specified in
-  [nolte/claude-shared#573](https://github.com/nolte/claude-shared/issues/573),
+  [`nolte/claude-shared#573`](https://github.com/nolte/claude-shared/issues/573),
   and §9 the falsification rule its self-test satisfies.

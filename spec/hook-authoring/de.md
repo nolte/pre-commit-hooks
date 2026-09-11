@@ -24,7 +24,7 @@ inline gekennzeichnet.
 Ein Hook in diesem Repository ist keine Stilfrage. Er ist der mechanische
 Rückstand einer Defektklasse, die einmal geschlossen wurde und nicht
 zurückkommen darf. Die Methode ist in
-**[nolte/claude-shared#573](https://github.com/nolte/claude-shared/issues/573)**
+**[`nolte/claude-shared#573`](https://github.com/nolte/claude-shared/issues/573)**
 spezifiziert, *„the portfolio has no rule for what a closed defect class leaves
 behind (defect-class guards)"*, und die Hooks dieser Spec setzen sie um. Ihre
 sechs Regeln, in der Form, die für das Authoring zählt:

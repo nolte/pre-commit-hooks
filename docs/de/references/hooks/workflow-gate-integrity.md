@@ -171,5 +171,5 @@ outcome is not a verdict:
 
 - [`spec/hook-authoring`](../governance.md) §0 hält die
   Defect-Class-Guard-Methode fest, die dieser Hook umsetzt, spezifiziert in
-  [nolte/claude-shared#573](https://github.com/nolte/claude-shared/issues/573),
+  [`nolte/claude-shared#573`](https://github.com/nolte/claude-shared/issues/573),
   und §9 die Falsifikationsregel, die sein Self-Test erfüllt.

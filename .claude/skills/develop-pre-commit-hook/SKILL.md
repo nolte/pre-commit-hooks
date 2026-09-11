@@ -106,12 +106,24 @@ Then:
   `.github/styles/config/vocabularies/pre-commit-hooks/accept.txt`, or the
   spelling-vale gate fails on the first prose mention.
 
-> **The CI prose gate is spelling-only.** It enforces `Vale.Spelling` /
-> `Vale.Terms`, not the full Microsoft style. The shipped docs deliberately
-> carry `Microsoft.*` findings (`" — "` dashes, `It is`, passive voice), so
-> don't chase those — match the existing pages' voice and fix only spelling.
-> German pages set `Vale.Spelling = NO`, so vocab additions are for the English
-> page.
+> **The CI prose gate fails on any error-level Vale finding, not spelling
+> alone.** `Microsoft.Contractions`, `Microsoft.Avoid` ("backend"),
+> `Microsoft.Quotes`, `Vale.Spelling`, `Vale.Terms` and `Vale.Repetition` all
+> gate; `Microsoft.Passive`, `.Adverbs`, `.Semicolon` and `.Vocab` are
+> warning-level and don't. `.vale.ini` disables `Microsoft.Dashes` globally, so
+> the spaced em-dash is fine — but `It is`, `cannot` and `does not` are not:
+> `develop`'s English prose is Vale-clean at error level, and the house voice
+> uses contractions throughout.
+>
+> Verify with the repository's own config, never a filtered subset:
+>
+> ```bash
+> vale docs/en README.md spec/hook-authoring/en.md   # NOT --filter=…Spelling
+> ```
+>
+> A `--filter` narrowed to `Vale.Spelling` reports clean while CI fails; that
+> has happened. German pages set `Vale.Spelling = NO`, so vocab additions are
+> for the English page.
 
 ## Step 6 — Repo-specific requirements (only if needed)
 
@@ -128,7 +140,7 @@ Run, and report results honestly:
 task test                          # all self-tests, including the new one
 pre-commit run --all-files         # dogfood: lint + the new hook against this repo
 pre-commit validate-manifest .pre-commit-hooks.yaml   # manifest shape
-vale --filter='.Name == "Vale.Spelling"' docs/en/references/hooks/<id>.md   # spelling gate
+vale docs/en README.md spec/hook-authoring/en.md   # prose gate, full config
 task docs                          # mkdocs build --strict (en + de must build)
 pre-commit try-repo . <id>         # optional end-to-end run through the framework
 ```

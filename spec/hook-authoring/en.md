@@ -21,7 +21,7 @@ flagged inline.
 
 A hook in this repository is not a style preference. It is the mechanical residue
 of a defect class that was closed once and must not come back. The method is
-specified in **[nolte/claude-shared#573](https://github.com/nolte/claude-shared/issues/573)**,
+specified in **[`nolte/claude-shared#573`](https://github.com/nolte/claude-shared/issues/573)**,
 *"the portfolio has no rule for what a closed defect class leaves behind
 (defect-class guards)"*, which this spec's hooks implement. Its six rules, in the
 form that bears on authoring:
