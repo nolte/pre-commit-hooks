@@ -26,7 +26,7 @@ intro, **Prerequisites**, **Arguments**, **Behaviour**, **Example**,
   commit that stages one language of a multilingual spec topic while leaving a
   tracked sibling translation unstaged.
 - [workflow-gate-integrity](hooks/workflow-gate-integrity.md): refuse a GitHub
-  Actions gate that cannot report a failure.
+  Actions gate that can't report a failure.
 
 ## Common contract
 
@@ -57,11 +57,10 @@ clone, which is indistinguishable from a primary checkout on a feature branch;
 these hooks target a developer's local commit, not the CI lint job.
 `guard-primary-checkout` and `guard-spec-translation-sync` are of this kind.
 
-A **correctness check** does not get that exemption. It runs under `CI` too and
-fails closed, because a check that excuses itself from the environment it is
-meant to gate is not a gate. `workflow-gate-integrity` is of this kind, and its
-page says so explicitly. Each hook page states which kind it is under
-**Behaviour**.
+A **correctness check** doesn't get that exemption. It runs under `CI` too and
+fails closed, because a check that excuses itself from the environment it's
+meant to gate isn't a gate. `workflow-gate-integrity` is of this kind, and its
+page says so explicitly. Each hook page names its kind under **Behaviour**.
 
 ### Primary checkout versus linked worktree
 
