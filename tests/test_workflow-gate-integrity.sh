@@ -306,6 +306,105 @@ jobs:
 check "the shape-3 escape hatch is reachable above a commented job key" "" \
   "$(findings_for "$sandbox/r6" w.yml)"
 
+# --- Regressions from the second review round -------------------------------
+# The paths-ignore support above introduced the first of these; the rest were
+# already reachable and the round surfaced them. All reproduced before fixing.
+
+mk "$sandbox/t1" 'name: t1
+on:
+  push:
+    paths-ignore: ["tests/e2e/snapshots/**"]
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pytest tests/e2e' tests/e2e/test_x.py tests/e2e/snapshots/s.json
+check "ignoring a subtree leaves the parent directory covered" "" \
+  "$(findings_for "$sandbox/t1" w.yml)"
+
+mk "$sandbox/t2" 'name: t2
+on:
+  push:
+    paths-ignore: ["tools/ci/**"]
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./tools/ci/verify.sh' tools/ci/verify.sh
+check "ignoring the very path the workflow reads is still reported" \
+  "w.yml:9:uncovered_path_reference" \
+  "$(findings_for "$sandbox/t2" w.yml)"
+
+mk "$sandbox/t3" 'name: t3
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths: ["src/**"]
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./tools/ci/verify.sh' tools/ci/verify.sh
+check "a tag-only push grants no blanket coverage" \
+  "w.yml:11:uncovered_path_reference" \
+  "$(findings_for "$sandbox/t3" w.yml)"
+
+mk "$sandbox/t4" 'name: t4
+on:
+  push:
+    tags: ["v*"]
+    branches: [main]
+  pull_request:
+    paths: ["src/**"]
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./tools/ci/verify.sh' tools/ci/verify.sh
+check "a push carrying branches alongside tags still covers everything" "" \
+  "$(findings_for "$sandbox/t4" w.yml)"
+
+# A label-only leg must contribute no blanket coverage, which is only
+# observable beside a narrow sibling filter: treated as automatic it covers
+# everything and reports nothing, and so does contributing nothing, so an
+# assertion without the sibling proves nothing about the scalar handling.
+mk "$sandbox/t5" 'name: t5
+on:
+  push:
+    paths: ["src/**"]
+  pull_request:
+    types: labeled
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./tools/ci/verify.sh' tools/ci/verify.sh
+check "a scalar types: is read as its one-element list" \
+  "w.yml:11:uncovered_path_reference" \
+  "$(findings_for "$sandbox/t5" w.yml)"
+
+# shellcheck disable=SC2016
+mk "$sandbox/t6" 'name: t6
+on: [push]
+jobs:
+      build:
+            runs-on: ubuntu-latest
+            outputs:
+                  tag: ${{ steps.x.outputs.tag }}
+            steps:
+                  - id: x
+                    run: echo tag=v1
+      publish:
+            needs: [build]
+            if: always()
+            runs-on: ubuntu-latest
+            steps:
+                  - run: echo ${{ needs.build.outputs.tag }}'
+check "a deeply indented job key is located, not reported at line 1" \
+  "w.yml:11:unguarded_needs_output" \
+  "$(findings_for "$sandbox/t6" w.yml)"
+
 # --- Arguments and failure modes --------------------------------------------
 mk "$sandbox/s5" 'name: s5
 on: [push]

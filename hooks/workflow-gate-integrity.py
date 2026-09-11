@@ -318,13 +318,28 @@ def _job_line(lines: list[str], name: str) -> int:
       indented key in the ``on:`` block earlier in the file, and the finding is
       reported against the trigger.
     """
-    pattern = re.compile(rf"^\s{{2,4}}{re.escape(name)}:\s*(#.*)?$")
     jobs_key = re.compile(r"^jobs:\s*(#.*)?$")
+    any_key = re.compile(r"^(\s+)[^\s#][^:]*:")
     start = 0
     for index, line in enumerate(lines):
         if jobs_key.match(line):
             start = index + 1
             break
+
+    # The job keys are whatever depth this file indents to, not a fixed two to
+    # four spaces: a six-space file sent every shape-3 finding to line 1, where
+    # no comment block can sit above it and the escape hatch is unreachable.
+    # The first key under `jobs:` establishes the depth; siblings share it.
+    indent = None
+    for index in range(start, len(lines)):
+        match = any_key.match(lines[index])
+        if match:
+            indent = match.group(1)
+            break
+    if indent is None:
+        return 1
+
+    pattern = re.compile(rf"^{re.escape(indent)}{re.escape(name)}:\s*(#.*)?$")
     for index in range(start, len(lines)):
         if pattern.match(lines[index]):
             return index + 1
@@ -444,11 +459,24 @@ def _automatic_diff_trigger(trigger: str, spec: Any) -> bool:
     An absent ``types:`` is GitHub's default (opened / synchronize / reopened),
     all of which are automatic.
     """
-    if trigger == "push":
-        return True
     if not isinstance(spec, dict):
         return True
+    if trigger == "push":
+        # A push narrowed to tags fires when somebody cuts a release, not when
+        # somebody changes a file — the same argument as the label-driven leg
+        # below. A `branches:` alongside it puts it back on ordinary pushes.
+        tag_only = ("tags" in spec or "tags-ignore" in spec) and not (
+            "branches" in spec or "branches-ignore" in spec
+        )
+        return not tag_only
     types = spec.get("types")
+    if types is None:
+        return True
+    # `types: labeled` is legal YAML and means the one-element list. Falling back
+    # to "automatic" on a non-list re-opened the hole this function exists to
+    # close, for exactly the shape it is about.
+    if isinstance(types, str):
+        types = [types]
     if not isinstance(types, list):
         return True
     return any(entry in AUTOMATIC_PULL_REQUEST_TYPES for entry in types if isinstance(entry, str))
@@ -516,10 +544,16 @@ def filter_pattern_groups(document: Any) -> list[list[str]]:
         spec = trigger_block[trigger]
         if isinstance(spec, dict):
             entries = spec.get("paths")
-            if isinstance(entries, list):
+            if isinstance(entries, list) and entries:
                 group = [entry for entry in entries if isinstance(entry, str)]
                 if group:
                     groups.append(group)
+                continue
+            if isinstance(entries, list):
+                # `paths: []` selects nothing, so the trigger never fires on a
+                # diff: no coverage, and no blanket fallback either. GitHub
+                # rejects `paths` beside `paths-ignore` for one event, so there
+                # is no sibling branch to fall through to.
                 continue
             ignored = spec.get("paths-ignore")
             if isinstance(ignored, list):
@@ -916,25 +950,32 @@ def path_justification_for(lines: list[str], line: int, reference: str) -> str |
     return None
 
 
-def entry_matches(pattern: str, reference: str, *, is_directory: bool) -> bool:
+def entry_matches(pattern: str, reference: str, *, is_directory: bool, partial: bool = True) -> bool:
     """Whether one filter pattern selects *reference*.
 
     A **file** matches when the pattern matches it outright. A **directory**
     matches when the pattern matches the directory, matches something beneath it,
-    or is itself rooted beneath it — ``src/app/lib/**`` counts as reaching
-    ``src/app``. That last case is partial coverage, and it counts on
-    purpose: this shape reports the *absence* of any trigger path into a
-    reference, not the completeness of one, and grading completeness would demand
-    a written reason for entries that do fire.
+    or — when *partial* — is itself rooted beneath it: ``src/app/lib/**`` counts
+    as reaching ``src/app``. That last case is partial coverage, and it counts on
+    purpose for a *positive* entry: this shape reports the absence of any trigger
+    path into a reference, not the completeness of one, and grading completeness
+    would demand a written reason for entries that do fire.
+
+    ``partial=False`` turns that case off, and a **negated** entry needs it off.
+    Reaching-into is an argument for inclusion and against exclusion, so applying
+    it to a negation inverts its meaning: ``!src/generated/**`` would remove the
+    whole of ``src`` from coverage, when what it removes is one subtree. That
+    asymmetry is how a ``paths-ignore:`` naming a subtree turned a correct
+    repository red — the common spelling, on a fail-closed hook.
     """
     regex = glob_to_regex(pattern)
     if regex.match(reference):
         return True
     if not is_directory:
         return False
-    return bool(
-        regex.match(f"{reference}/{_DIRECTORY_PROBE}") or pattern.startswith(f"{reference}/")
-    )
+    if regex.match(f"{reference}/{_DIRECTORY_PROBE}"):
+        return True
+    return partial and pattern.startswith(f"{reference}/")
 
 
 def covers(group: list[str], reference: str, *, is_directory: bool) -> bool:
@@ -952,7 +993,7 @@ def covers(group: list[str], reference: str, *, is_directory: bool) -> bool:
     for entry in group:
         negated = entry.startswith("!")
         pattern = entry[1:] if negated else entry
-        if entry_matches(pattern, reference, is_directory=is_directory):
+        if entry_matches(pattern, reference, is_directory=is_directory, partial=not negated):
             verdict = not negated
     return verdict
 
