@@ -16,6 +16,7 @@ tasks:
     cmds:
       - tests/test_guard-primary-checkout.sh
       - tests/test_guard-spec-translation-sync.sh
+      - tests/test_workflow-gate-integrity.sh
 
   lint:
     desc: Run all pre-commit hooks
