@@ -319,3 +319,40 @@ wiederherzustellen und beide Male Rot zu sehen.
   `docker-publish.yml`, nicht wegen #1235. Genau die Verwechslung, die das Issue
   „installiert, nicht verifiziert" nennt, eine Ebene tiefer. Deshalb werden die
   Assertions auf Datei **und** Kind gekeyt, nie auf den Exit-Code allein.
+
+2026-09-11 P2 `develop-pre-commit-hook` — done, nach Operator-Entscheid „Weg 1"
+(#1235 durch einen echten Zweitfund derselben Klasse ersetzen). Zwei Fixtures,
+beide wörtlich aus dem Fix-Commit extrahiert: kamerplanter#1302 (`421de1d2d`,
+`uncovered_path_reference` Zeile 74) und kamerplanter#1294 (`78785f87b`,
+`commented_continuation` Zeile 190). **Attribution korrigiert:** das Issue nennt
+diese Klasse als #1308; der Commit, der die Trunkierung behob, ist #1294.
+Mutationsgeprüft: Form 5 abschalten lässt genau den #1302-Fall fallen, Form 4
+genau den #1294-Fall, nie den anderen. 14 Fälle grün.
+
+2026-09-11 P3 `spec` — done. `spec/hook-authoring/{en,de}.md` §0 nennt
+claude-shared#573 als Methode, mit der Lesart, die Regel 5 hier braucht. §9 um
+die Falsifikationsregel ergänzt, auf die §0 verweist. Beide Sprachen gemeinsam
+gestaged.
+
+2026-09-11 P4 `develop-pre-commit-hook` (statt `audience-doc-author`; das
+Spezialisten-Skill trägt Doku als Teil seines eigenen „complete or not
+done"-Vertrags) — done. Zweisprachige Referenzseite, mkdocs-Nav, README-Zeile,
+Vale-Vokabular. **Nebenbefund:** der gemeinsame Vertrag behauptete „every hook
+short-circuits under CI", was durch diesen Hook falsch wurde; in beiden Sprachen
+in Workflow-Guard versus Korrektheitsprüfung aufgeteilt. `guard-spec-translation-sync`
+fehlte in der Hook-Liste beider Index-Seiten, ergänzt.
+
+2026-09-11 Nebenbefund außerhalb des Auftrags — `.gitignore` Zeile
+`!.github/styles/.vale-config` hob die Ignorierung für das ganze Verzeichnis auf,
+inklusive der ~90 von `vale sync` geholten Microsoft- und RedHat-Style-Dateien.
+Ein `git add -A` nach einem Sync committete sie alle. Bestandsfehler, durch diesen
+Lauf ausgelöst und hier behoben; die Negation ist jetzt auf die `.ini` dieses
+Repos eingeengt.
+
+2026-09-11 verify — `git diff --stat origin/develop...HEAD`: 25 Dateien, 3338
+Einfügungen (nicht leer, Gate gültig). Drei Self-Tests grün, `pre-commit run
+--all-files` grün inklusive des neuen Hooks im Dogfood-Block, `validate-manifest`
+grün, `mkdocs build --strict` grün, Vale-Spelling/Terms grün.
+**Sicherheit:** kein `code-security-reviewer`-Lauf. Der Hook ist read-only (keine
+Schreiboperation), beide `subprocess.run`-Aufrufe nutzen Argumentlisten ohne
+Shell, `--tree-root` landet als Argument von `git -C`, nicht in einem Shell-String.
