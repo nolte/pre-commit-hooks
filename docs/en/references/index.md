@@ -22,6 +22,11 @@ intro, **Prerequisites**, **Arguments**, **Behaviour**, **Example**,
 
 - [guard-primary-checkout](hooks/guard-primary-checkout.md): block commits
   made in the primary checkout while it sits on a feature branch.
+- [guard-spec-translation-sync](hooks/guard-spec-translation-sync.md): block a
+  commit that stages one language of a multilingual spec topic while leaving a
+  tracked sibling translation unstaged.
+- [workflow-gate-integrity](hooks/workflow-gate-integrity.md): refuse a GitHub
+  Actions gate that cannot report a failure.
 
 ## Common contract
 
@@ -44,12 +49,19 @@ repos:
 Pin to a released tag for deterministic behaviour. Renovate bumps the `rev`
 in the consumer's config like any other dependency.
 
-### Fail open in automation
+### Fail open in automation — for workflow guards
 
-Every hook short-circuits to *allow* when the `CI` environment variable is
-set. CI checks the branch out in a detached HEAD inside a plain clone, which
-is indistinguishable from a primary checkout on a feature branch; the hooks
-target a developer's local commit, not the CI lint job.
+A **workflow guard** short-circuits to *allow* when the `CI` environment
+variable is set. CI checks the branch out in a detached HEAD inside a plain
+clone, which is indistinguishable from a primary checkout on a feature branch;
+these hooks target a developer's local commit, not the CI lint job.
+`guard-primary-checkout` and `guard-spec-translation-sync` are of this kind.
+
+A **correctness check** does not get that exemption. It runs under `CI` too and
+fails closed, because a check that excuses itself from the environment it is
+meant to gate is not a gate. `workflow-gate-integrity` is of this kind, and its
+page says so explicitly. Each hook page states which kind it is under
+**Behaviour**.
 
 ### Primary checkout versus linked worktree
 

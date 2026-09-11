@@ -17,6 +17,7 @@ nav:
       - Hooks:
           - guard-primary-checkout: references/hooks/guard-primary-checkout.md
           - guard-spec-translation-sync: references/hooks/guard-spec-translation-sync.md
+          - workflow-gate-integrity: references/hooks/workflow-gate-integrity.md
       - Governance and specs: references/governance.md
 
 plugins:
