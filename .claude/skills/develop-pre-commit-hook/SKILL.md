@@ -124,6 +124,20 @@ Then:
 > A `--filter` narrowed to `Vale.Spelling` reports clean while CI fails; that
 > has happened. German pages set `Vale.Spelling = NO`, so vocab additions are
 > for the English page.
+>
+> **Local vale and the action's bundled vale disagree, so a clean local run is
+> necessary and not sufficient.** `errata-ai/vale-action` runs `filter_mode:
+> added`, so only lines you added gate — but its parser catches two shapes
+> vale 3.15.2 misses locally:
+>
+> - a contraction split across a line break (`… do` / `**not** …` is one `do
+>   not` to CI, two tokens locally);
+> - `Vale.Terms` on a repository name in a link label (`nolte/claude-shared`
+>   wants `Claude`). Backtick the label; `IgnoredScopes = code,tt,em` exempts it.
+>
+> When CI reports a finding you cannot reproduce, read
+> `gh run view <id> --log-failed` for the exact file:line and fix that, rather
+> than assuming the run is wrong.
 
 ## Step 6 — Repo-specific requirements (only if needed)
 
