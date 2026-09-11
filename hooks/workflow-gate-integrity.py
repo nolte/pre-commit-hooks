@@ -210,6 +210,13 @@ _NEEDS_RESULT = re.compile(r"needs\.([A-Za-z0-9_*-]+)\.result\b")
 #: breaks a check ever meets it.
 DIFF_TRIGGERS = ("push", "pull_request", "pull_request_target")
 
+#: Pull-request activity types that GitHub raises for the diff itself. A
+#: ``types:`` list naming none of them (``labeled``, say) fires only when a
+#: person acts, so it does not put the change in front of the check.
+AUTOMATIC_PULL_REQUEST_TYPES = frozenset(
+    {"opened", "synchronize", "synchronized", "reopened", "ready_for_review"}
+)
+
 #: A candidate repo-relative path: at least two ``/``-separated segments. One
 #: segment is not enough to tell ``Taskfile.yaml`` from a shell word, and the
 #: existence probe below cannot rescue that — ``docker``, ``helm`` and ``spec``
@@ -298,11 +305,29 @@ def _strip_comment(line: str) -> str:
 
 
 def _job_line(lines: list[str], name: str) -> int:
-    """The 1-based line of the ``<name>:`` key in the ``jobs:`` mapping."""
-    pattern = re.compile(rf"^\s{{2,4}}{re.escape(name)}:\s*$")
-    for index, line in enumerate(lines, start=1):
-        if pattern.match(line):
-            return index
+    """The 1-based line of the ``<name>:`` key in the ``jobs:`` mapping.
+
+    Two details that a plainer regex gets wrong, both of which cost the site its
+    escape hatch — the reported line is where :func:`justification_for` looks
+    for a reason, so pointing at the wrong line makes shape 3 unjustifiable:
+
+    - the key may carry a **trailing comment** (``publish:  # fan-in``), so the
+      match cannot demand end-of-line after the colon;
+    - the search must start **after** ``jobs:``. A job legitimately named
+      ``push``, ``paths`` or ``branches`` otherwise collides with the identically
+      indented key in the ``on:`` block earlier in the file, and the finding is
+      reported against the trigger.
+    """
+    pattern = re.compile(rf"^\s{{2,4}}{re.escape(name)}:\s*(#.*)?$")
+    jobs_key = re.compile(r"^jobs:\s*(#.*)?$")
+    start = 0
+    for index, line in enumerate(lines):
+        if jobs_key.match(line):
+            start = index + 1
+            break
+    for index in range(start, len(lines)):
+        if pattern.match(lines[index]):
+            return index + 1
     return 1
 
 
@@ -409,8 +434,28 @@ def scan_continuations(path: Path, lines: list[str]) -> list[Finding]:
     return findings
 
 
+def _automatic_diff_trigger(trigger: str, spec: Any) -> bool:
+    """Whether *spec* fires on the diff itself, without anyone doing anything.
+
+    ``push`` always does. ``pull_request`` / ``pull_request_target`` do unless
+    their ``types:`` narrows them to events a person has to cause — the
+    label-driven leg is the real case, and it fires when somebody remembers the
+    label, which is not the same as putting the change in front of the check.
+    An absent ``types:`` is GitHub's default (opened / synchronize / reopened),
+    all of which are automatic.
+    """
+    if trigger == "push":
+        return True
+    if not isinstance(spec, dict):
+        return True
+    types = spec.get("types")
+    if not isinstance(types, list):
+        return True
+    return any(entry in AUTOMATIC_PULL_REQUEST_TYPES for entry in types if isinstance(entry, str))
+
+
 def filter_pattern_groups(document: Any) -> list[list[str]]:
-    """One ``paths:`` list per diff-driven trigger, in file order.
+    """One coverage group per diff-driven trigger, in file order.
 
     Grouped per trigger rather than flattened, because ``!`` negation is
     *ordered within a list*: a change is selected by the last entry that matches
@@ -419,31 +464,76 @@ def filter_pattern_groups(document: Any) -> list[list[str]]:
 
     A workflow is then considered to cover a path when **any** of its triggers
     does. That union across triggers is deliberate: grading each trigger
-    separately would report ``security-nuclei-templates.yml``'s intentionally
-    narrower ``push`` filter — the template directory only, while the
-    ``pull_request`` filter also watches the validator hook and the pins file —
-    as findings naming no defect. Whether the *right lane* fires is the sibling
-    shape (kamerplanter#1302's deeper half: a pin assertion living only in a nightly that
-    blocks nothing) and needs a judgement this one does not make.
+    separately would report an intentionally narrower ``push`` filter — say a
+    template directory only, while the ``pull_request`` filter also watches the
+    validator hook and the pins file — as findings naming no defect. Whether the
+    *right lane* fires is the sibling shape (kamerplanter#1302's deeper half: a
+    pin assertion living only in a nightly that blocks nothing) and needs a
+    judgement this one does not make.
+
+    Three trigger shapes produce a group, and the two that are not a literal
+    ``paths:`` list are the ones this checker got wrong until they were
+    measured:
+
+    - **``paths:``** — the list itself.
+    - **``paths-ignore:``** — everything *except* those patterns, spelled
+      ``["**", "!<ignored>", …]`` so it runs through the same ordered
+      last-match-wins evaluation as a hand-written negation. Reading only
+      ``paths:`` made a workflow that excludes the very file it reads report
+      clean, which is this shape's own defect arriving from the mirror
+      direction.
+    - **Neither** — the trigger fires on every change, so it covers everything:
+      ``["**"]``. Treating such a trigger as contributing *nothing* is worse
+      than a missed finding, it is a false positive in a hook that is
+      ``always_run`` and fails closed. The common ``push`` narrowed by ``paths:``
+      beside an unfiltered ``pull_request:`` gate would block every commit in a
+      repository that is correct.
+
+    A trigger whose ``types:`` leaves only human-caused events contributes
+    nothing, per :func:`_automatic_diff_trigger`; ``schedule`` and
+    ``workflow_dispatch`` are absent from :data:`DIFF_TRIGGERS` for the same
+    reason.
     """
     if not isinstance(document, dict):
         return []
     # PyYAML resolves the bare key ``on:`` to the boolean True (YAML 1.1), which
     # is why every workflow parser in this repository has to look for both.
     trigger_block = document.get(True, document.get("on"))
+
+    # ``on: push`` and ``on: [push, pull_request]`` carry no filter at all, so
+    # every diff trigger they name fires on every change.
+    if isinstance(trigger_block, str):
+        trigger_block = {trigger_block: None}
+    elif isinstance(trigger_block, list):
+        trigger_block = {entry: None for entry in trigger_block if isinstance(entry, str)}
     if not isinstance(trigger_block, dict):
         return []
+
     groups: list[list[str]] = []
     for trigger in DIFF_TRIGGERS:
-        spec = trigger_block.get(trigger)
-        if not isinstance(spec, dict):
+        if trigger not in trigger_block:
             continue
-        entries = spec.get("paths")
-        if not isinstance(entries, list):
-            continue
-        group = [entry for entry in entries if isinstance(entry, str)]
-        if group:
-            groups.append(group)
+        spec = trigger_block[trigger]
+        if isinstance(spec, dict):
+            entries = spec.get("paths")
+            if isinstance(entries, list):
+                group = [entry for entry in entries if isinstance(entry, str)]
+                if group:
+                    groups.append(group)
+                continue
+            ignored = spec.get("paths-ignore")
+            if isinstance(ignored, list):
+                group = [f"!{entry}" for entry in ignored if isinstance(entry, str)]
+                if group:
+                    groups.append(["**", *group])
+                    continue
+        # No explicit filter: the trigger covers everything -- but only if it
+        # fires on the diff by itself. The automatic check gates *blanket*
+        # coverage alone; an explicit `paths:` above still counts whatever its
+        # `types:` says, because a narrowed lane that cannot reach a file it
+        # reads is the finding, not an exemption from it.
+        if _automatic_diff_trigger(trigger, spec):
+            groups.append(["**"])
     return groups
 
 
@@ -768,19 +858,35 @@ def _comment_block_reasons(lines: list[str]) -> list[str]:
     ``#`` lines, and the path it names is as likely to land on the second line
     as the first.
     """
+    needle = JUSTIFICATION_MARKER.lstrip("# ")
+
+    def _reason(block: str) -> str | None:
+        marker = block.find(needle)
+        return block[marker + len(needle) :].strip() if marker != -1 else None
+
     reasons: list[str] = []
     index = 0
     while index < len(lines):
         if not lines[index].strip().startswith("#"):
+            # A marker beside the entry it is about — the placement the shape-5
+            # documentation points at, ``- 'src/**'  # gate-integrity-ok: …``
+            # next to the filter it declines to widen. Collecting only
+            # comment-only blocks made that documented placement silently
+            # inert, so the reader followed the docs and stayed blocked.
+            hash_index = lines[index].find("#")
+            if hash_index != -1:
+                trailing = _reason(lines[index][hash_index:].lstrip("#").strip())
+                if trailing is not None:
+                    reasons.append(trailing)
             index += 1
             continue
         start = index
         while index < len(lines) and lines[index].strip().startswith("#"):
             index += 1
         block = " ".join(line.strip().lstrip("#").strip() for line in lines[start:index])
-        marker = block.find(JUSTIFICATION_MARKER.lstrip("# "))
-        if marker != -1:
-            reasons.append(block[marker + len(JUSTIFICATION_MARKER.lstrip("# ")) :].strip())
+        reason = _reason(block)
+        if reason is not None:
+            reasons.append(reason)
     return reasons
 
 

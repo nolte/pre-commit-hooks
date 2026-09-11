@@ -68,7 +68,13 @@ Der Hook meldet fünf Formen. Alle sind in Produktion aufgetreten.
    still hinter ihren eigenen Existenzprüfungen.
 5. **Ein Pfad, den der Workflow liest, den sein eigener `paths:`-Filter aber
    ausschließt** — die Änderung, die eine Prüfung am ehesten brechen kann, ist
-   dann genau die, die sie nie ausführt.
+   dann genau die, die sie nie ausführt. `paths-ignore:` zählt genauso: die
+   gelesene Datei auszuschließen ist derselbe Defekt von der anderen Seite
+   geschrieben. Ein Trigger *ohne* Filter deckt alles ab, ein enger
+   `push`-Filter neben einem schlichten `pull_request:`-Gate ist also kein
+   Fund — der Pull Request startet den Workflow. Ein Trigger, den `types:` auf
+   rein menschlich ausgelöste Ereignisse wie `labeled` einengt, gewährt diese
+   Blanket-Deckung nicht.
 
 Zwei Konventionen des gemeinsamen Vertrags gelten hier nicht:
 

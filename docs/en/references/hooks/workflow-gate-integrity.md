@@ -65,7 +65,12 @@ The hook reports five shapes. All of them have occurred in production.
    those steps skip silently behind their own existence guards.
 5. **A path the workflow reads that its own `paths:` filter excludes** — the
    one change most able to break a check is then the one change that never runs
-   it.
+   it. `paths-ignore:` counts the same way: excluding the file the workflow
+   reads is the same defect spelled from the other side. A trigger carrying
+   *no* filter covers everything, so a narrow `push` filter beside a plain
+   `pull_request:` gate isn't a finding — the pull request runs the workflow.
+   A trigger narrowed by `types:` to human-caused events only, such as
+   `labeled`, grants no such blanket coverage.
 
 Two conventions from the common contract don't apply:
 

@@ -131,10 +131,19 @@ check "kamerplanter#1294 post-fix state is GREEN on that file" \
   "$(findings_for "$sandbox/f1294-green" security-nuclei-nightly.yml)"
 
 # --- Synthetic shapes and the contract --------------------------------------
-mk() { # <dir> <workflow-body>
+mk() { # <dir> <workflow-body> [extra-tracked-path ...]
   local dir="$1"; shift
+  local body="$1"; shift
   rm -rf "$dir"; mkdir -p "$dir/.github/workflows"
-  printf '%s\n' "$1" > "$dir/.github/workflows/w.yml"
+  printf '%s\n' "$body" > "$dir/.github/workflows/w.yml"
+  # Extra tracked files, committed with the workflow. Shape 5 only reports a
+  # reference the checkout actually tracks, so a case about a read path needs
+  # that path to exist in the index.
+  local extra
+  for extra in "$@"; do
+    mkdir -p "$dir/$(dirname "$extra")"
+    : > "$dir/$extra"
+  done
   git init -q -b main "$dir"
   git -C "$dir" -c user.email=t@t -c user.name=t add -A
   git -C "$dir" -c user.email=t@t -c user.name=t commit -q -m fixture
@@ -190,6 +199,112 @@ jobs:
       - run: hits=$(grep -c "^kind:" f || true)'
 check "a marker with too short a reason is not an exemption" "w.yml:8:swallowed_exit" \
   "$(findings_for "$sandbox/s4" w.yml)"
+
+# --- Regressions found while reviewing the adoption PR ----------------------
+# Each was a real defect in the ported checker, reproduced by hand before it was
+# fixed. Synthetic rather than extracted, because these are shapes the origin
+# repository never happened to contain -- which is exactly why they survived the
+# port.
+
+mk "$sandbox/r1" 'name: r1
+on:
+  push:
+    paths: ["src/**"]
+  pull_request:
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./tools/ci/verify.sh' tools/ci/verify.sh
+check "an unfiltered sibling trigger covers every path" "" \
+  "$(findings_for "$sandbox/r1" w.yml)"
+
+mk "$sandbox/r2" 'name: r2
+on:
+  push:
+    paths-ignore: ["tools/ci/**"]
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./tools/ci/verify.sh' tools/ci/verify.sh
+check "paths-ignore excluding the file the workflow reads is reported" \
+  "w.yml:9:uncovered_path_reference" \
+  "$(findings_for "$sandbox/r2" w.yml)"
+
+mk "$sandbox/r3" 'name: r3
+on:
+  push:
+    paths:
+      - "src/**"  # gate-integrity-ok: tools/ci/verify.sh must not widen this trigger
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./tools/ci/verify.sh' tools/ci/verify.sh
+check "a marker beside the paths entry exempts the path it names" "" \
+  "$(findings_for "$sandbox/r3" w.yml)"
+
+mk "$sandbox/r4" 'name: r4
+on:
+  pull_request:
+    types: [labeled]
+    paths: ["src/**"]
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./tools/ci/verify.sh' tools/ci/verify.sh
+check "a label-driven leg is not automatic coverage" \
+  "w.yml:10:uncovered_path_reference" \
+  "$(findings_for "$sandbox/r4" w.yml)"
+
+# Shape 3 had no synthetic case at all, which is where the job-key defect hid.
+# GitHub ${{ … }} expressions are fixture content the hook must see verbatim,
+# never something this script should expand.
+# shellcheck disable=SC2016
+mk "$sandbox/r5" 'name: r5
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.x.outputs.tag }}
+    steps:
+      - id: x
+        run: echo tag=v1
+  publish:  # fan-in
+    needs: [build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ needs.build.outputs.tag }}'
+check "an overridden gate reading outputs without result is reported at its job key" \
+  "w.yml:11:unguarded_needs_output" \
+  "$(findings_for "$sandbox/r5" w.yml)"
+
+# GitHub ${{ … }} expressions are fixture content the hook must see verbatim,
+# never something this script should expand.
+# shellcheck disable=SC2016
+mk "$sandbox/r6" 'name: r6
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.x.outputs.tag }}
+    steps:
+      - id: x
+        run: echo tag=v1
+  # gate-integrity-ok: publish re-checks the tag before it uploads anything
+  publish:  # fan-in
+    needs: [build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ needs.build.outputs.tag }}'
+check "the shape-3 escape hatch is reachable above a commented job key" "" \
+  "$(findings_for "$sandbox/r6" w.yml)"
 
 # --- Arguments and failure modes --------------------------------------------
 mk "$sandbox/s5" 'name: s5
