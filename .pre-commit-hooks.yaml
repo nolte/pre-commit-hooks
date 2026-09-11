@@ -34,3 +34,26 @@
   always_run: true
   pass_filenames: false
   stages: [pre-commit]
+- id: workflow-gate-integrity
+  name: no CI gate that cannot fail
+  description: >-
+    Refuse a GitHub Actions gate that cannot report a failure: a discarded exit
+    code, `continue-on-error: true`, a job reading a dependency's outputs
+    without its result, a comment truncating a continued command, or a file the
+    workflow reads that its own `paths:` filter excludes. A site may stand by
+    carrying a `# gate-integrity-ok: <reason>` comment. Configure the scanned
+    directory with `args: [--scan-root=.github/workflows]` (the default).
+  entry: hooks/workflow-gate-integrity.py
+  # `language: script` runs the committed file directly, with pre-commit
+  # resolving the path against this repository's clone. The check needs a YAML
+  # parser for the two shapes that read parsed workflow structure, so it asks
+  # for `python3` and `PyYAML` on the consumer's PATH rather than having
+  # pre-commit build a managed environment — see Prerequisites in the README.
+  # A missing parser fails the hook loudly; it never degrades to a partial scan.
+  language: script
+  # This hook fails CLOSED: unlike the two guards above it does not short-circuit
+  # under `CI`. It checks CI configuration, and a gate that exempts itself from
+  # CI would be the shape it exists to refuse. See CLAUDE.md §Module conventions.
+  always_run: true
+  pass_filenames: false
+  stages: [pre-commit]
