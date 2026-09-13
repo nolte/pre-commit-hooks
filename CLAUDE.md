@@ -14,20 +14,41 @@ the manifest that exposes them.
 
 Preserve this contract when editing or adding hooks:
 
-- Each hook is one self-contained script under `hooks/`, named after its hook
-  ID (`hooks/<id>.sh`). No runtime dependencies beyond `git` and a POSIX-ish
-  shell; `set -euo pipefail` at the top.
+- Each hook is one self-contained file under `hooks/`, named after its hook ID.
+  **A POSIX shell script (`hooks/<id>.sh`, `set -euo pipefail`, `language:
+  script`, no runtime dependency beyond `git`) is the default** and the right
+  choice for every check that shells out to `git` and greps text.
+  Reach for another interpreter only when the check genuinely needs it — see
+  `spec/hook-authoring/` §4, which is authoritative on the choice. The one hook
+  that does so today is `workflow-gate-integrity`
+  (`hooks/workflow-gate-integrity.py`): it must read parsed workflow YAML, which
+  a shell script cannot do. It stays on `language: script` — the entry is still
+  a committed file in `hooks/`, so pre-commit resolves the path against this
+  repository's clone — and asks for `python3` plus `PyYAML` on the consumer's
+  PATH. `language: python` was tried and rejected: it builds a managed
+  virtualenv and resolves `entry:` against that environment's console scripts,
+  which would require turning this repository into an installable package.
+  A hook whose interpreter or library is missing **must exit 2**, not 0 or 1, so
+  that a scan which did not happen stays distinguishable from a clean one.
 - Every hook is registered in `.pre-commit-hooks.yaml` with a stable `id`, a
-  human `name`, a `description`, and `language: script`.
-- Hooks fail **open** in automation: short-circuit to exit 0 when `CI` is set,
-  so the same hook installed locally does not block CI lint jobs.
+  human `name`, a `description`, and its `language`.
+- **Fail-open under `CI` is a rule about workflow guards, not about hooks in
+  general.** A guard whose premise is the developer's local working copy —
+  `guard-primary-checkout`, `guard-spec-translation-sync` — short-circuits to
+  exit 0 when `CI` is set, because CI checks the branch out in a detached HEAD
+  inside a normal clone where the premise no longer holds, and the hook would
+  otherwise block every lint job. A correctness check that is meant to gate
+  everywhere fails **closed** and runs under `CI` too; `workflow-gate-integrity`
+  is that case, and a hook that inspects CI configuration while excusing itself
+  from CI would not be a gate at all. `spec/hook-authoring/` §6 draws the same
+  line. Decide deliberately per hook and state the decision in its header.
 - Tunable behaviour is exposed via pre-commit `args:` (e.g.
   `--branch <name>`), parsed defensively with a sensible default — never
   hard-code a portfolio-specific value that a `main`-integrating repo can't
   override.
 - Every hook has a matching self-test under `tests/test_<id>.sh` that builds
-  throwaway git repos and asserts on exit codes. Run the whole suite before
-  changing a hook.
+  throwaway git repos and asserts on exit codes — a shell test regardless of the
+  hook's own backend. Run the whole suite (`task test`) before changing a hook.
 
 ## Common commands
 

@@ -21,8 +21,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+      # workflow-gate-integrity needs a YAML parser; without it the hook exits 2
+      # and this job goes red, rather than skipping the shapes silently.
+      - name: Install hook runtime dependencies
+        run: pip install PyYAML
+      # Every suite under tests/, not a hand-maintained subset. This job used to
+      # name one script, so the self-tests for the other two hooks never ran on a
+      # pull request and a regression that removed a detector stayed green --
+      # which is the defect class workflow-gate-integrity itself exists to refuse.
       - name: Run hook self-tests
-        run: tests/test_guard-primary-checkout.sh
+        run: |
+          set -euo pipefail
+          for suite in tests/test_*.sh; do
+            echo "::group::$suite"
+            "$suite"
+            echo "::endgroup::"
+          done
 
   docs:
     runs-on: ubuntu-latest

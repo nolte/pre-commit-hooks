@@ -106,12 +106,38 @@ Then:
   `.github/styles/config/vocabularies/pre-commit-hooks/accept.txt`, or the
   spelling-vale gate fails on the first prose mention.
 
-> **The CI prose gate is spelling-only.** It enforces `Vale.Spelling` /
-> `Vale.Terms`, not the full Microsoft style. The shipped docs deliberately
-> carry `Microsoft.*` findings (`" — "` dashes, `It is`, passive voice), so
-> don't chase those — match the existing pages' voice and fix only spelling.
-> German pages set `Vale.Spelling = NO`, so vocab additions are for the English
-> page.
+> **The CI prose gate fails on any error-level Vale finding, not spelling
+> alone.** `Microsoft.Contractions`, `Microsoft.Avoid` ("backend"),
+> `Microsoft.Quotes`, `Vale.Spelling`, `Vale.Terms` and `Vale.Repetition` all
+> gate; `Microsoft.Passive`, `.Adverbs`, `.Semicolon` and `.Vocab` are
+> warning-level and don't. `.vale.ini` disables `Microsoft.Dashes` globally, so
+> the spaced em-dash is fine — but `It is`, `cannot` and `does not` are not:
+> `develop`'s English prose is Vale-clean at error level, and the house voice
+> uses contractions throughout.
+>
+> Verify with the repository's own config, never a filtered subset:
+>
+> ```bash
+> vale docs/en README.md spec/hook-authoring/en.md   # NOT --filter=…Spelling
+> ```
+>
+> A `--filter` narrowed to `Vale.Spelling` reports clean while CI fails; that
+> has happened. German pages set `Vale.Spelling = NO`, so vocab additions are
+> for the English page.
+>
+> **Local vale and the action's bundled vale disagree, so a clean local run is
+> necessary and not sufficient.** `errata-ai/vale-action` runs `filter_mode:
+> added`, so only lines you added gate — but its parser catches two shapes
+> vale 3.15.2 misses locally:
+>
+> - a contraction split across a line break (`… do` / `**not** …` is one `do
+>   not` to CI, two tokens locally);
+> - `Vale.Terms` on a repository name in a link label (`nolte/claude-shared`
+>   wants `Claude`). Backtick the label; `IgnoredScopes = code,tt,em` exempts it.
+>
+> When CI reports a finding you cannot reproduce, read
+> `gh run view <id> --log-failed` for the exact file:line and fix that, rather
+> than assuming the run is wrong.
 
 ## Step 6 — Repo-specific requirements (only if needed)
 
@@ -128,7 +154,7 @@ Run, and report results honestly:
 task test                          # all self-tests, including the new one
 pre-commit run --all-files         # dogfood: lint + the new hook against this repo
 pre-commit validate-manifest .pre-commit-hooks.yaml   # manifest shape
-vale --filter='.Name == "Vale.Spelling"' docs/en/references/hooks/<id>.md   # spelling gate
+vale docs/en README.md spec/hook-authoring/en.md   # prose gate, full config
 task docs                          # mkdocs build --strict (en + de must build)
 pre-commit try-repo . <id>         # optional end-to-end run through the framework
 ```

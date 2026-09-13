@@ -17,6 +17,44 @@ source manifests, the `identify` library, and the git `githooks` reference. See
 [Sources](#sources). Where a claim is contested or version-dependent, it is
 flagged inline.
 
+## 0. Why a hook exists at all — the defect-class guard method
+
+A hook in this repository is not a style preference. It is the mechanical residue
+of a defect class that was closed once and must not come back. The method is
+specified in **[`nolte/claude-shared#573`](https://github.com/nolte/claude-shared/issues/573)**,
+*"the portfolio has no rule for what a closed defect class leaves behind
+(defect-class guards)"*, which this spec's hooks implement. Its six rules, in the
+form that bears on authoring:
+
+1. A closed defect class leaves a mechanical guard behind, or a written note
+   saying why none is possible.
+2. The guard runs in an **enforced** lane. A guard in an advisory lane is a
+   comment.
+3. The guard **enumerates the class**; it does not check the one site where the
+   defect was found. The predicate belongs in the file's header, not in the
+   commit message.
+4. Exceptions live in an allowlist with a reason per entry, and an entry that no
+   longer matches anything fails the guard.
+5. The guard carries the issue number in its name, so the finding and the rule
+   stay findable together.
+6. The selector must not be a filename when the property is a property of the
+   assembled application.
+
+Rule 5 needs a reading for this repository. The hooks here are portfolio-wide:
+they close a class for every consumer, not a defect in this repository, so there
+is no single issue number to carry in the hook id. The provenance goes in the
+hook's own header instead, naming the issues whose defects it was built from.
+`workflow-gate-integrity` is the worked example — its module docstring names the
+originating kamerplanter issues, and its fixtures under
+`tests/fixtures/workflow-gate-integrity/` carry the commit each was extracted
+from.
+
+Rule 3 is the one most often violated by a hook that looks finished. A guard
+that checks the site rather than the class passes on the day it lands and never
+fires again. §9 is where that is caught: a hook is verified when it has been
+**red on the defect it was built from**, not when it is green on the current
+tree.
+
 ## 1. Mental model — how pre-commit executes a hook
 
 - pre-commit is a **multi-language framework** for managing git hooks (~260k
@@ -254,6 +292,33 @@ For hooks that act on the repo as a whole rather than per file, set
 - **`pre-commit try-repo`** for a real end-to-end run through the framework.
 - For Python hooks, unit-test the check function directly with `pytest`.
 - Run `pre-commit validate-manifest` in CI to catch manifest regressions.
+
+**Falsification — the gate §0 rule 3 depends on.** A hook is verified when it has
+been **red on the defect it was built from**, not when it is green on the current
+tree. A hook that is green in its origin repository and has never been red in the
+consuming one is not verified, it is installed.
+
+- Keep a fixture of the **pre-fix state of a real closed defect**, extracted
+  verbatim from the commit that fixed it (`git show <fix>^:<path>`), together
+  with the post-fix state. Record the extraction command and the fix commit
+  beside the fixture; do not hand-write the defect, and do not add a provenance
+  header to the fixture file itself, because that shifts the line numbers the
+  assertion keys on.
+- **Assert on the finding, not on the exit code.** Over a real pre-fix tree the
+  hook is usually red for several unrelated reasons at once, so an exit-code
+  assertion passes while proving nothing about the defect it names — and keeps
+  passing after the hook loses the ability to detect it. Key the assertion to
+  the file, the line and the kind of finding.
+- **Make an empty result impossible to mistake for a pass.** Where "no findings"
+  is itself an expected value, a helper that returns empty when the hook crashed
+  makes those cases pass without the hook running at all. Emit a distinct error
+  marker instead. This is the hook's own defect class, reproduced in its test.
+- **Mutation-check the falsification cases**: disable the shape each one covers
+  and confirm that case, and only that case, fails. An assertion that survives
+  the removal of the code it tests is not an assertion.
+- When a named defect turns out to be **outside the hook's reach**, say so in the
+  fixture record and substitute a real defect of the same class. Do not
+  manufacture a fixture that makes an unreachable defect look covered.
 
 ## 10. Anti-patterns
 

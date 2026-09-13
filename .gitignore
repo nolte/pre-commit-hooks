@@ -19,6 +19,12 @@ site
 .github/styles/*
 !.github/styles/.keep
 !.github/styles/.vale-config
+# …but only this repository's own config file inside it. `vale sync` fetches the
+# upstream Microsoft and RedHat style packages into .vale-config/styles/, and the
+# bare negation above re-included all ~90 of them: a single `git add -A` after a
+# sync committed the whole vendored style tree.
+.github/styles/.vale-config/*
+!.github/styles/.vale-config/*.ini
 !.github/styles/nolte-styles
 !.github/styles/config
 .github/styles/config/*
@@ -28,3 +34,7 @@ site
 !.github/styles/config/vocabularies/technical/**
 !.github/styles/config/vocabularies/pre-commit-hooks
 !.github/styles/config/vocabularies/pre-commit-hooks/**
+
+# Python bytecode from the language: python hook
+__pycache__/
+*.py[cod]

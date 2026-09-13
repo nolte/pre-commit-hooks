@@ -1,0 +1,23 @@
+kamerplanter#1302 — a pin assertion whose path filter excludes the very file
+whose pin it asserts, so it cannot fire on the pull request that changes it.
+
+Named in nolte/pre-commit-hooks#11 as one of the defects this hook was built
+from, and required there as falsification: the hook must be RED on the pre-fix
+state, not merely installed.
+
+  red/    git show 421de1d2d^:.github/workflows/security-nuclei-templates.yml
+          git show 421de1d2d^:.github/renovate-pins.yaml
+  green/  git show 421de1d2d:.github/workflows/security-nuclei-templates.yml
+          git show 421de1d2d^:.github/renovate-pins.yaml
+
+  fix     421de1d2d  fix(ci): refuse a workflow that reads a path its own
+                     filter excludes (#1316)
+
+Both files are verbatim; nothing was added to them, because a provenance header
+would shift the line numbers the assertion keys on. `.github/renovate-pins.yaml`
+is carried because the fifth shape resolves read paths against the checkout's
+TRACKED files: without it the reference is not a path and the defect does not
+reproduce.
+
+Expected: red/ reports `uncovered_path_reference` at line 74 of
+security-nuclei-templates.yml; green/ reports nothing for that file.

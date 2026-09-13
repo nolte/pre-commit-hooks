@@ -27,3 +27,11 @@ repos:
         language: script
         always_run: true
         pass_filenames: false
+      # Fails closed on purpose: unlike the two guards above this one checks CI
+      # configuration, so it must also run under CI. See CLAUDE.md.
+      - id: workflow-gate-integrity
+        name: no CI gate that cannot fail
+        entry: hooks/workflow-gate-integrity.py
+        language: script
+        always_run: true
+        pass_filenames: false

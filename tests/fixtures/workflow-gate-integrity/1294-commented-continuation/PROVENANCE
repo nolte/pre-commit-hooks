@@ -1,0 +1,23 @@
+kamerplanter#1294 — a comment block placed after a trailing `\` truncates the
+nuclei command, so `-tags`, `-severity` and both output flags never run. The
+step goes red, which looks self-reporting, but `results.jsonl` and
+`results.sarif` are never written and the later SARIF upload and issue-opening
+steps skip silently behind their own existence guards.
+
+This is the shape nolte/pre-commit-hooks#11 describes as "a clean scan and a
+scan that never ran, indistinguishable downstream" (listed there as
+kamerplanter#1308, which fixed the downstream half of the same family). It
+stands in for kamerplanter#1235, which that issue also named: #1235's defect
+lived in scripts/ci/check_digest_freshness.py, outside .github/workflows, and
+none of this hook's five shapes has a predicate for it — verified by running
+the hook over e0ac3980c^, which reports zero findings in
+chart-image-digest-freshness.yml.
+
+  red/    git show 78785f87b^:.github/workflows/security-nuclei-nightly.yml
+  green/  git show 78785f87b:.github/workflows/security-nuclei-nightly.yml
+
+  fix     78785f87b  fix(security): stop the nightly Nuclei command from being
+                     truncated by a comment (#1294)
+
+Expected: red/ reports `commented_continuation` at line 190 of
+security-nuclei-nightly.yml; green/ reports nothing for that file.

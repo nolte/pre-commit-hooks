@@ -1,10 +1,16 @@
-[Pp]robot
+allowlist
 Ansible
 asdf
 config
+docstring
 dotfile
 env
+kamerplanter
 mkdocs
 nolte
+nuclei
+[Pp]robot
+PyYAML
 Taskfile
+untracked
 zsh
